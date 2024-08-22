@@ -1,0 +1,80 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <map>
+#include <algorithm>
+
+using namespace std;
+
+// Structure to hold information about each charging station
+struct ChargingStation {
+    string id;
+    string location;
+    int powerRating; // kW
+    string connectorType;
+    int availableSlots;
+    map<string, bool> slotAvailability; // Slot time and its availability
+
+    // Constructor to initialize the charging station
+    ChargingStation(string id, string location, int powerRating, string connectorType, int availableSlots)
+        : id(id), location(location), powerRating(powerRating), connectorType(connectorType), availableSlots(availableSlots) {
+        // Initialize slots for the day (e.g., 24 slots for each hour of the day)
+        for (int i = 0; i < 24; i++) {
+            string timeSlot = to_string(i) + ":00-" + to_string(i + 1) + ":00";
+            slotAvailability[timeSlot] = true; // All slots are initially available
+        }
+    }
+};
+
+// Function to find charging stations based on filters
+vector<ChargingStation> findChargingStations(const vector<ChargingStation>& stations, const string& location, const string& connectorType, int minPowerRating) {
+    vector<ChargingStation> filteredStations;
+    for (const auto& station : stations) {
+        if (station.location == location && station.connectorType == connectorType && station.powerRating >= minPowerRating) {
+            filteredStations.push_back(station);
+        }
+    }
+    return filteredStations;
+}
+
+// Function to book a charging slot in advance
+bool bookChargingSlot(ChargingStation& station, const string& timeSlot) {
+    if (station.slotAvailability[timeSlot]) {
+        station.slotAvailability[timeSlot] = false;
+        station.availableSlots--;
+        cout << "Slot " << timeSlot << " at station " << station.id << " booked successfully." << endl;
+        return true;
+    } else {
+        cout << "Slot " << timeSlot << " at station " << station.id << " is already booked." << endl;
+        return false;
+    }
+}
+
+int main() {
+    vector<ChargingStation> stations = {
+        ChargingStation("CS001", "Downtown", 50, "Type2", 4),
+        ChargingStation("CS002", "Uptown", 150, "CCS", 6),
+        ChargingStation("CS003", "Suburb", 22, "Type2", 2),
+        ChargingStation("CS004", "Downtown", 120, "CHAdeMO", 3)
+    };
+
+    // Filters to search for charging stations
+    string location = "Downtown";
+    string connectorType = "Type2";
+    int minPowerRating = 20;
+
+    vector<ChargingStation> filteredStations = findChargingStations(stations, location, connectorType, minPowerRating);
+
+    cout << "Available Charging Stations at " << location << " with " << connectorType << " connector and at least " << minPowerRating << " kW power rating:" << endl;
+    for (const auto& station : filteredStations) {
+        cout << "Station ID: " << station.id << ", Location: " << station.location << ", Power: " << station.powerRating << " kW, Available Slots: " << station.availableSlots << endl;
+    }
+
+    // Book a charging slot in advance
+    if (!filteredStations.empty()) {
+        string timeSlot = "14:00-15:00"; // Example time slot
+        bookChargingSlot(filteredStations[0], timeSlot);
+    }
+
+    return 0;
+}
